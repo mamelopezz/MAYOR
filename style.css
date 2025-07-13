@@ -58,3 +58,19 @@ h1 {
 
 .semestre-2, .semestre-4, .semestre-6, .semestre-8, .semestre-10 { background-color: #d4e4ed; }
 .semestre-2 h2, .semestre-4 h2, .semestre-6 h2, .semestre-8 h2, .semestre-10 h2 { background-color: #aec6cf; }
+
+/* Estilos para estados de asignatura */
+.asignatura.aprobado {
+    background-color: #d0d0d0;
+    text-decoration: line-through;
+}
+
+.asignatura.deshabilitado {
+    background-color: #f0f0f0;
+    color: #b0b0b0;
+    cursor: not-allowed;
+}
+
+.asignatura.deshabilitado h3, .asignatura.deshabilitado p {
+    color: #b0b0b0;
+}

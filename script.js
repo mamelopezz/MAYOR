@@ -1,4 +1,3 @@
-
 const data = [
     { codigo: "3", nombre: "Biología Celular y Molecular", semestre: 1, requisitos: [] },
     { codigo: "10", nombre: "Histoembriología Veterinaria", semestre: 2, requisitos: ["3"] },
@@ -18,55 +17,60 @@ function crearTabla() {
     });
 
     for (const [semestre, ramos] of Object.entries(agrupado)) {
-        const tabla = document.createElement("table");
-        const cabecera = document.createElement("tr");
-        cabecera.innerHTML = `<th colspan="3">Semestre ${semestre}</th>`;
-        tabla.appendChild(cabecera);
+        const semestreDiv = document.createElement("div");
+        semestreDiv.classList.add("semestre", `semestre-${semestre}`);
+        semestreDiv.innerHTML = `<h2>Semestre ${semestre}</h2>`;
 
         ramos.forEach(ramo => {
-            const fila = document.createElement("tr");
-            fila.classList.add(`semestre-${romano(semestre)}`, "ramo");
-            fila.dataset.codigo = ramo.codigo;
-            fila.dataset.requisitos = JSON.stringify(ramo.requisitos);
-            fila.innerHTML = `<td>${ramo.codigo}</td><td>${ramo.nombre}</td><td>${ramo.requisitos.join(", ") || "Ingreso"}</td>`;
-            tabla.appendChild(fila);
+            const asignaturaDiv = document.createElement("div");
+            asignaturaDiv.classList.add("asignatura");
+            asignaturaDiv.dataset.codigo = ramo.codigo;
+            asignaturaDiv.dataset.requisitos = JSON.stringify(ramo.requisitos);
+            asignaturaDiv.innerHTML = `<h3>${ramo.nombre}</h3><p>Código: ${ramo.codigo}</p>`;
+            semestreDiv.appendChild(asignaturaDiv);
         });
 
-        container.appendChild(tabla);
+        container.appendChild(semestreDiv);
     }
-}
-
-function romano(num) {
-    const map = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
-    return map[num] || num;
 }
 
 function actualizarEstado() {
     const completados = JSON.parse(localStorage.getItem("ramos_aprobados") || "[]");
 
-    document.querySelectorAll(".ramo").forEach(ramo => {
-        const reqs = JSON.parse(ramo.dataset.requisitos);
-        const habilitado = reqs.every(r => completados.includes(r) || r === "Ingreso");
+    document.querySelectorAll(".asignatura").forEach(asignatura => {
+        const reqs = JSON.parse(asignatura.dataset.requisitos);
+        const habilitado = reqs.every(r => completados.includes(r));
 
-        ramo.classList.toggle("locked", !habilitado && !completados.includes(ramo.dataset.codigo));
-        ramo.classList.toggle("unlocked", habilitado && !completados.includes(ramo.dataset.codigo));
-        ramo.classList.toggle("completed", completados.includes(ramo.dataset.codigo));
+        asignatura.classList.remove("aprobado", "deshabilitado");
+
+        if (completados.includes(asignatura.dataset.codigo)) {
+            asignatura.classList.add("aprobado");
+        } else if (!habilitado) {
+            asignatura.classList.add("deshabilitado");
+        }
     });
 }
 
-function manejarClick() {
-    document.querySelectorAll(".ramo.unlocked").forEach(ramo => {
-        ramo.addEventListener("click", () => {
-            const completados = JSON.parse(localStorage.getItem("ramos_aprobados") || "[]");
-            if (!completados.includes(ramo.dataset.codigo)) {
-                completados.push(ramo.dataset.codigo);
-                localStorage.setItem("ramos_aprobados", JSON.stringify(completados));
-                actualizarEstado();
-            }
-        });
-    });
+function manejarClick(e) {
+    const asignatura = e.target.closest(".asignatura");
+    if (!asignatura || asignatura.classList.contains("deshabilitado")) return;
+
+    const completados = JSON.parse(localStorage.getItem("ramos_aprobados") || "[]");
+    const codigo = asignatura.dataset.codigo;
+
+    if (completados.includes(codigo)) {
+        // Desaprobar
+        const index = completados.indexOf(codigo);
+        completados.splice(index, 1);
+    } else {
+        // Aprobar
+        completados.push(codigo);
+    }
+
+    localStorage.setItem("ramos_aprobados", JSON.stringify(completados));
+    actualizarEstado();
 }
 
 crearTabla();
 actualizarEstado();
-manejarClick();
+container.addEventListener("click", manejarClick);
